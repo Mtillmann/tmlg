@@ -419,7 +419,12 @@ const fs$1 = require("fs");
 class FsStorage {
   dir;
   constructor() {
-    this.dir = __dirname + "/../";
+    const homedir = require("os").homedir(), dir = homedir + "/.tmlg-data";
+    if (!fs$1.existsSync(dir)) {
+      fs$1.mkdirSync(dir, {});
+    }
+    this.dir = dir + "/";
+    console.log({ dir: this.dir });
   }
   set(key, input) {
     if (typeof input !== "string") {

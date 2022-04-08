@@ -6,7 +6,14 @@ export class FsStorage {
     dir:string;
 
     constructor() {
-        this.dir = __dirname + '/../';
+
+        const homedir = require('os').homedir(),
+        dir = homedir + '/.tmlg-data';
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, {});
+        }
+
+        this.dir = dir + '/';
     }
 
     set(key: string, input: any): void {
