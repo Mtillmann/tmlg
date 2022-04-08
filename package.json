@@ -1,11 +1,11 @@
 {
   "name": "tmlg",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "MIT",
   "preferGlobal": true,
   "description": "simple timelogging for web and cli with exports",
   "bin": {
-    "http-server": "./bin/tmlg"
+    "tmlg": "./bin/tmlg"
   },
   "scripts": {
     "build-cli": "vite build --config vite-cli.config.ts && npm run rename-cli",
