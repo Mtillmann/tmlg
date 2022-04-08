@@ -1,4 +1,4 @@
-#TMLG
+# TMLG
 
 A simple and fast time logger for web and cli:
 
