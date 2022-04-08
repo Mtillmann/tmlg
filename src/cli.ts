@@ -115,7 +115,7 @@ if (argk.length === 1 && argk[0] === '_' && argv._.length > 0) {
         childArgv.push((key.length === 1 ? '-' : '--') + key + ' ' + argv[key]);
     }
 
-    cp.fork('./node_modules/http-server/bin/http-server', childArgv, {});
+    cp.fork(__dirname+'/../node_modules/http-server/bin/http-server', childArgv, {});
 
 } else if ('sync-enable' in argv || 'sync-disable' in argv) {
     (new Sync(settings)).toggle('sync-enable' in argv);

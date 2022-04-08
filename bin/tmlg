@@ -417,23 +417,27 @@ const settingTypes = {
 };
 const fs$1 = require("fs");
 class FsStorage {
+  dir;
+  constructor() {
+    this.dir = __dirname + "/../";
+  }
   set(key, input) {
     if (typeof input !== "string") {
       input = JSON.stringify(input);
     }
-    fs$1.writeFileSync(`DATA_${key}.json`, input);
+    fs$1.writeFileSync(`${this.dir}DATA_${key}.json`, input);
   }
   get(key, defaultValue = false) {
     let found = defaultValue;
     try {
-      const raw = fs$1.readFileSync(`DATA_${key}.json`);
+      const raw = fs$1.readFileSync(`${this.dir}DATA_${key}.json`);
       found = JSON.parse(raw);
     } catch (e) {
     }
     return found;
   }
   remove(key) {
-    fs$1.unlinkSync(`DATA_${key}.json`);
+    fs$1.unlinkSync(`${this.dir}DATA_${key}.json`);
     return true;
   }
 }
@@ -18761,7 +18765,7 @@ if (argk.length === 1 && argk[0] === "_" && argv._.length > 0) {
     }
     childArgv.push((key.length === 1 ? "-" : "--") + key + " " + argv[key]);
   }
-  cp.fork("./node_modules/http-server/bin/http-server", childArgv, {});
+  cp.fork(__dirname + "/../node_modules/http-server/bin/http-server", childArgv, {});
 } else if ("sync-enable" in argv || "sync-disable" in argv) {
   new Sync(settings).toggle("sync-enable" in argv);
 } else if ("sync" in argv) {
