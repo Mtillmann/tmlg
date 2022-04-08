@@ -5,7 +5,6 @@ A simple and fast time logger for web and cli:
 - [simple syntax](https://mtillmann.github.io/tmlg/#h=help), no unnecessary controls
 - responsive, color-scheme-aware frontend
 - serverless synchronization between multiple devices
-- zero requirements and dependencies (except a decent browser)
 - bundled with http-server
 - supports timers
 - exports to xlsx, odt...
