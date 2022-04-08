@@ -26,7 +26,7 @@ You can also just download this repo and put the contents of `/dist/` on any htt
 ## CLI Usage
 
 ```text
-usage: timetrack [options|timelog]
+usage: tmlg [options|timelog]
 
 use a quoted string as argument to create a timelog, e.g. "@acme #admin did some stuff and such"
 
