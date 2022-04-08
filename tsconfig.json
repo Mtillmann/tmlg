@@ -1,0 +1,24 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.web.json",
+  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "compilerOptions": {
+    "target": "es2020",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "lib": [
+      "es2020"
+    ],
+    "types": [
+      "node"
+    ],
+    "typeRoots": [ "./node_modules/@types" ]
+  },
+
+  "references": [
+    {
+      "path": "./tsconfig.vite-config.json"
+    }
+  ]
+}

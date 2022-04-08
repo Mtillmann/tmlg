@@ -1,0 +1,17 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.node.json",
+  "include": [
+    "vite.config.*"
+  ],
+  "compilerOptions": {
+    "target": "es2020",
+    "composite": true,
+    "types": [
+      "node"
+    ],
+    "typeRoots": [ "./node_modules/@types" ],
+    "lib": [
+      "es2020"
+    ]
+  }
+}

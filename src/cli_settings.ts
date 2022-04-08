@@ -1,0 +1,61 @@
+import type {ISettings} from "@/types/ISettings";
+
+export const defaultSettings:ISettings = {
+    filenameTemplate: 'Timelogs %s',
+    dateFormat: '',
+    dateRangeFormat: '',
+    defaultDuration: 30,
+    hourThreshold: 5,
+    defaultRate: 255,
+    currencyFormat: "%s €",
+    rateIncludesTax: true,
+    tax: 0,
+    showCostColumn: true,
+    showProjectColumn: true,
+    showSourceColumn: true,
+    showClientColumn: true,
+    showTaskColumn: true,
+    showDupeButton: true,
+    defaultClient: "",
+    defaultProject: "",
+    defaultTask: "",
+    defaultSource: "",
+    deviceName: null,
+    deviceId: null,
+    syncEnabled: true,
+    syncSettings: true,
+    cli_syncOnSave: false
+};
+export const visibleSettings:string[] = [
+    'filenameTemplate', 'dateFormat', 'dateRangeFormat', 'defaultDuration',
+    'hourThreshold', 'defaultRate', 'currencyFormat', 'rateIncludesTax', 'tax', 'showCostColumn',
+    'showProjectColumn', 'showSourceColumn', 'showClientColumn', 'showTaskColumn', 'showDupeButton',
+    'defaultClient', 'defaultProject', 'defaultTask', 'defaultSource', 'deviceName', 'deviceId',
+    'syncEnabled', 'syncSettings', 'cli_syncOnSave'];
+
+export const settingTypes: {[index:string]: string} = {
+    filenameTemplate: 'input',
+    dateFormat: 'input',
+    dateRangeFormat: 'input',
+    defaultDuration: 'number',
+    hourThreshold: 'number',
+    defaultRate: 'number',
+    currencyFormat: 'input',
+    rateIncludesTax: 'list',
+    tax: 'number',
+    showCostColumn: 'list',
+    showProjectColumn: 'list',
+    showSourceColumn: 'list',
+    showClientColumn: 'list',
+    showTaskColumn: 'list',
+    showDupeButton: 'list',
+    defaultClient: 'input',
+    defaultProject: 'input',
+    defaultTask: 'input',
+    defaultSource: 'input',
+    deviceName: 'input',
+    deviceId: 'input',
+    syncEnabled: 'list',
+    syncSettings: 'list',
+    cli_syncOnSave: 'list'
+};
