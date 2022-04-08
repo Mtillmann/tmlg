@@ -424,7 +424,6 @@ class FsStorage {
       fs$1.mkdirSync(dir, {});
     }
     this.dir = dir + "/";
-    console.log({ dir: this.dir });
   }
   set(key, input) {
     if (typeof input !== "string") {
