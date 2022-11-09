@@ -61,6 +61,7 @@ export default {
   },
   mounted() {
     this.modal = new Modal(this.$refs.modal);
+    //this.modal.show();
   },
   methods: {
     show(view = 'help') {

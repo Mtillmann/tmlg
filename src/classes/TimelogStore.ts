@@ -13,6 +13,9 @@ export class TimelogStore {
     options: { [index: string]: any };
     currentTransaction: { [index: string]: any } | null = null;
 
+    // @ts-ignore
+    currentSelection: ITimelogResult;
+
     constructor(timelogParser: TimelogParser, options: { [index: string]: any }) {
         this.options = options;
         this.timelogParser = timelogParser;
@@ -216,7 +219,6 @@ export class TimelogStore {
         this.makeIndex();
         this.storeTransactions();
         this.options.storage.set('data', this.data);
-        //localStorage.setItem('data', JSON.stringify(this.data));
     }
 
 
@@ -337,11 +339,12 @@ export class TimelogStore {
     }
 
     get(from: Date, to: Date, filters?: { [index: string]: string[] }): ITimelogResult {
-        let upperIndex: null | number = null,
-            lowerIndex: null | number = null;
+        let upperIndex: null | number = null;
+        let lowerIndex: null | number = null;
 
         from.setHours(0)
-        to.setHours(23.9)
+        to.setHours(23);
+        to.setMinutes(59);
 
         const range = {
                 lower: from, upper: to
@@ -369,13 +372,13 @@ export class TimelogStore {
 
             //todo check what happens if upper is end of array.. ???
             // @ts-ignore
-            const raw:ITimelog[] = this.data.slice(lowerIndex, upperIndex + 1).reverse(),
+            const raw: ITimelog[] = this.data.slice(lowerIndex, upperIndex + 1).reverse(),
                 defaultPass = !filters || !Object.values(filters).some((item: string[]): boolean => item.length > 0);
 
 
-            raw.filter((item:ITimelog) => {
+            raw.filter((item: ITimelog) => {
                 return defaultPass || this.filter(filters, item);
-            }).forEach((item:ITimelog) => {
+            }).forEach((item: ITimelog) => {
                 const ts: number = item.timestamp;
 
                 if (!(ts in output)) {
@@ -383,6 +386,8 @@ export class TimelogStore {
                         date: new Date(ts), total: 0, cost: 0, logs: []
                     }
                 }
+
+
                 output[ts].total += item.duration;
                 output[ts].cost += item.cost;
                 output[ts].logs.push(item);
@@ -394,11 +399,31 @@ export class TimelogStore {
 
         Object.keys(matchedProperties).forEach(property => matchedProperties[property] = [...new Set(matchedProperties[property])]);
 
-        return {
+        const days = Object.values(output);
+
+        let indexToLogMap: number[][] = [];
+        let logIndexToIndexMap: number[][] = [];
+        let index = 0;
+        days.forEach((d:any,i:number) => {
+            logIndexToIndexMap.push([]);
+            d.logs.forEach((l:any, j:number) => {
+                indexToLogMap[index] = [i,j];
+                logIndexToIndexMap[i].push(index);
+                index++
+            })
+        });
+
+
+
+        this.currentSelection = {
             matchedProperties,
-            days: Object.values(output),
-            range
+            days ,
+            range,
+            indexToLogMap,
+            logIndexToIndexMap
         };
+
+        return this.currentSelection;
     }
 
     slice(start: number = 0, end: number = 10, filters?: { [index: string]: string[] }): ITimelogResult {
@@ -413,6 +438,8 @@ export class TimelogStore {
 
 
         return {
+            indexToLogMap : [[]],
+            logIndexToIndexMap : [[]],
             days: {
                 [0]: dummyDay
             },

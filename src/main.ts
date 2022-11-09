@@ -10,7 +10,7 @@ import {useSettingsStore} from "@/stores/settings";
 import {LocalStorage} from "@/classes/LocalStorage";
 
 //import "../node_modules/ua-parser-js/dist/ua-parser.min.js";
-import { UAParser } from 'ua-parser-js'
+import {UAParser} from 'ua-parser-js'
 import {DateTimeHelper} from "@/classes/DateTimeHelper";
 
 const app = createApp(App);
@@ -25,7 +25,6 @@ app.provide('globalStore', globalStore);
 app.provide('settings', settingsStore);
 
 
-
 settingsStore.$subscribe(() => {
     const storage = new LocalStorage(),
         settings = {...settingsStore.$state};
@@ -33,8 +32,20 @@ settingsStore.$subscribe(() => {
 }, {detached: true})
 
 
-if(!settingsStore.showHelpIcon){
-    settingsStore.$patch({showHelpIcon : true});
+if (!('showIndexColumn' in settingsStore)) {
+    settingsStore.$patch({showIndexColumn: false});
+}
+if (!('syncOnLoad' in settingsStore)) {
+    settingsStore.$patch({syncOnLoad: true});
+}
+if (!('syncAfterSeconds' in settingsStore)) {
+    settingsStore.$patch({syncAfterSeconds: 30});
+}
+if (!('showHelpIcon' in settingsStore)) {
+    settingsStore.$patch({showHelpIcon: true});
+}
+if (!('defaultDateInsideSelection' in settingsStore)) {
+    settingsStore.$patch({defaultDateInsideSelection: true});
 }
 
 if (!settingsStore.deviceId) {

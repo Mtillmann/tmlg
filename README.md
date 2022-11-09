@@ -22,6 +22,18 @@ You can also just download this repo and put the contents of `/dist/` on any htt
 
 > The app needs to served either from `localhost` or a `SSL`-enabled server, otherwise the browser might deny access to certain APIs
 
+## Changelog
+
+### 1.0.0
+
+- new extensible log feature `****`
+- new `!`/`!!` history/copy feature
+- persistent state in url
+- more aggressive syncing strategy
+- misc date display/parsing/range related fixes and improvements
+- removed loading screen
+- misc improvements
+
 ## CLI Usage
 
 ```text

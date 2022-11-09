@@ -57,9 +57,6 @@ export default {
   mounted() {
     this.timelogStore.checkIntegrity()
 
-    if (this.settings.syncEnabled && this.sync.hasCredentials) {
-      this.syncIfNeeded();
-    }
 
     if ((new URL(window.location)).searchParams.has('encryptedSyncCredentials')) {
       this.$refs.importFromURL.show();
@@ -69,6 +66,12 @@ export default {
       this.$refs.help.show(/h=([\w]+)/.exec(window.location.hash)[1]);
       window.location.hash = '';
     }
+
+
+    if (this.settings.syncEnabled && this.sync.hasCredentials) {
+      this.syncIfNeeded(true, this.settings.syncOnLoad);
+    }
+
 
   },
   watch:{
@@ -84,6 +87,14 @@ export default {
     }
   },
   methods: {
+    afterInsert(){
+      if(this.settings.syncAfterSeconds > 0){
+        this.clearSyncTimeout();
+        this.syncIsRunning = true;
+        this.syncTimeout = setTimeout(this.syncIfNeeded.bind(this), this.settings.syncAfterSeconds * 1000);
+      }
+    },
+
     enableSync() {
       if (!this.syncIsRunning && this.sync.hasCredentials) {
         this.globalStore.toast('sync enabled');
@@ -97,7 +108,12 @@ export default {
         if (needsUpdate || forceUpdate) {
           this.sync.load().then(resp => {
 
-            if ('settings' in resp && resp.settings.syncSettings === true) {
+            if(!resp){
+              this.globalStore.setLoading(false)
+              return;
+            }
+
+            if (resp && 'settings' in resp && resp.settings.syncSettings === true) {
               let settingsUpdated = 0;
               for (const key in resp.settings) {
                 if (key !== 'deviceName' && key !== 'deviceId' && this.settings[key] !== resp.settings[key]) {
@@ -110,7 +126,7 @@ export default {
               }
             }
 
-            if ('transactions' in resp) {
+            if (resp && 'transactions' in resp) {
               const merged = this.timelogStore.mergeTransactions(resp.transactions);
               if (merged > 0) {
                 this.globalStore.toast(`synced ${merged} transactions...`)
@@ -143,10 +159,17 @@ export default {
 
     },
 
-    setSyncTimeout() {
-      const minutes = this.settings.checkForUpdateIntervalMinutes;
+    clearSyncTimeout(){
       clearTimeout(this.syncTimeout);
       this.syncTimeout = null;
+
+    },
+
+    setSyncTimeout() {
+      //const seconds = this.settings.syncAfterSeconds;
+      const minutes = this.settings.checkForUpdateIntervalMinutes;
+
+      this.clearSyncTimeout();
 
       if (Math.abs(minutes) === 0 || !this.settings.syncEnabled) {
         console.log('disabling sync')
@@ -154,23 +177,29 @@ export default {
         return;
       }
 
-      this.syncIsRunning = true;
+      console.log('setting timeout for ' + minutes + ' minutes...');
 
+      this.syncIsRunning = true;
       this.syncTimeout = setTimeout(this.syncIfNeeded.bind(this), minutes * 60 * 1000);
     },
 
     store() {
+
+      if(!this.settings.syncEnabled || !this.sync.hasCredentials){
+        return;
+      }
+
       this.globalStore.setLoading(true);
-
       this.timelogStore.commit(true);
-
       this.sync.store({
         transactions: this.timelogStore.transactions,
         settings: this.settings.$state
       }).then(json => {
         this.globalStore.setLoading(false);
         this.globalStore.toast(`${this.util.formatBytes(json.encrypted)} (${this.util.formatBytes(json.original)}) uploaded`)
-      });
+      }).catch(error => {
+        console.log(error);
+      })
     },
 
     syncNow(){
@@ -189,8 +218,9 @@ export default {
 </script>
 
 <template>
-
+<!--
   <LoadingModal></LoadingModal>
+  -->
   <TopBar></TopBar>
   <div class="container">
     <InputBox ref="input" :parser="parser" :log-store="timelogStore"
@@ -198,6 +228,7 @@ export default {
               :timers="timers"
               @show-help="$refs.help.show('help')"
               @reload-table="$refs.logTable.updateTableData()"
+              @after-insert="afterInsert"
     ></InputBox>
     <TimerList v-if="timers.timers.length > 0"
                :timers="timers"

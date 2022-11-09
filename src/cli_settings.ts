@@ -24,7 +24,8 @@ export const defaultSettings:ISettings = {
     deviceId: null,
     syncEnabled: true,
     syncSettings: true,
-    cli_syncOnSave: false
+    cli_syncOnSave: false,
+    showIndexColumn: false
 };
 export const visibleSettings:string[] = [
     'filenameTemplate', 'dateFormat', 'dateRangeFormat', 'defaultDuration',

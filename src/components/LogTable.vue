@@ -68,13 +68,13 @@
       </div>
       <div class="col-12" v-if="isFiltered">
         <div class="btn-group btn-group-sm mb-2 me-2">
-          <button class="btn btn-outline-primary btn-sm" @click="$refs.filterDialog.modal.show()">Change filters
+          <button class="btn btn-outline-primary btn-sm" @click="showFilters">Change filters
           </button>
-          <button class="btn btn-outline-primary btn-sm" @click="$refs.filterDialog.clear()">Clear all</button>
+          <button class="btn btn-outline-primary btn-sm" @click="clearFilters">Clear all</button>
         </div>
         <template v-for="(filterList, key) in filters">
           <button type="button" class="btn btn-sm btn-outline-info me-2 mb-2" v-for="(filterItem, i) in filterList"
-                  @click="$refs.filterDialog.toggleFilter(key, filterItem, true)">
+                  @click="toggleFilter(key, filterItem, true)">
             &times; {{ prefixPropertyMap[key] }}{{ filterItem }}
           </button>
         </template>
@@ -96,6 +96,11 @@
               <table class="table table-sm">
                 <thead>
                 <tr>
+
+                  <th v-if="settings.showIndexColumn">
+                    <span class="text-primary">!</span>
+                  </th>
+
 
                   <th v-if="settings.showClientColumn">
                     <span class="d-none d-lg-inline">Client <span class="text-primary">@</span></span>
@@ -135,6 +140,8 @@
 
                 <tr v-for="(log, logIndex) in data.logs">
 
+                  <td v-if="settings.showIndexColumn">{{ getIndex(dayIndex, logIndex) }}</td>
+
                   <td v-if="settings.showClientColumn">{{ util.join(log.clients, '') }}</td>
 
                   <td v-if="settings.showProjectColumn">{{ util.join(log.projects, '') }}</td>
@@ -171,7 +178,8 @@
                 <tfoot>
                 <tr>
                   <td :colspan="totalCellColspan()"></td>
-                  <td v-if="settings.showCostColumn" v-html="util.formatCost(dayTotalCost(data.logs), settings.currencyFormat, settings.tax, settings.rateIncludesTax)">
+                  <td v-if="settings.showCostColumn"
+                      v-html="util.formatCost(dayTotalCost(data.logs), settings.currencyFormat, settings.tax, settings.rateIncludesTax)">
                   </td>
                   <td>{{ util.formatDuration(dayTotalTime(data.logs)) }}</td>
                   <td :colspan="settings.showDupeButton ? 3 : 2"></td>
@@ -216,12 +224,40 @@ export default {
     suggestionProvider: SuggestionProvider
   },
   data() {
-    const initRange = this.util.dateRange('week', this.util.formatDate(new Date()));
+    let initRange = this.util.dateRange('week', this.util.formatDate(new Date()));
+    let url = new URL(window.location);
+    let from = url.searchParams.get('from');
+    let to = url.searchParams.get('to');
+    let filters = {};
+    let isFiltered = false;
+    let dateMode = ['week', 'month', 'custom'].includes(url.searchParams.get('mode')) ? url.searchParams.get('mode') : 'week';
+
+    if (/^\d\d\d\d-\d\d-\d\d$/.test(from) && /^\d\d\d\d-\d\d-\d\d$/.test(from)) {
+
+      let prevDate = new Date(from),
+          nextDate = new Date(to),
+          diff = +nextDate - +prevDate,
+          isWeek = diff / (24 * 60 * 60 * 1000) < 7;
+
+      if (isWeek) {
+        prevDate = new Date(+prevDate - 7 * 24 * 60 * 60 * 1000);
+      }
+
+
+      initRange = {
+        lowerUS: from,
+        upperUS: to,
+        lower: new Date(from),
+        upper: new Date(to),
+        next: to,
+        prev: this.util.formatDate(prevDate)
+      };
+    }
 
     return {
-      isFiltered: false,
-      filters: {},
-      dateMode: 'week',
+      isFiltered,
+      filters,
+      dateMode,
       fromDate: initRange.lowerUS,
       toDate: initRange.upperUS,
       nextDate: initRange.next,
@@ -240,17 +276,16 @@ export default {
 
   watch: {
     fromDate: function () {
-      if(this.dateMode === 'week'){
-        //set date to first of week
-        let currentStart = new Date(this.fromDate),
-            day = currentStart.getDay();
-        if(day !== 1){
-          currentStart.setDate( currentStart.getDate() + (day === 0 ? -6 : 1 - day) );
+      if (this.dateMode === 'week') {
+        const currentStart = new Date(this.fromDate);
+        const day = currentStart.getDay();
+        if (day !== 1) {
+          currentStart.setDate(currentStart.getDate() + (day === 0 ? -6 : 1 - day));
         }
         this.fromDate = this.util.formatDate(currentStart);
-        this.toDate = this.util.formatDate(currentStart.setDate(currentStart.getDate() + 7));
-      }
-      else if(this.dateMode === 'month'){
+        this.toDate = this.util.formatDate(currentStart.setDate(currentStart.getDate() + 6));
+
+      } else if (this.dateMode === 'month') {
         let date = new Date(this.fromDate);
 
         date.setDate(1);
@@ -263,15 +298,54 @@ export default {
       }
     }
   },
-
+  mounted() {
+    this.updateTableData()
+  },
   methods: {
+
+    getIndex(dayIndex, logIndex){
+      if(!this.logStore.currentSelection.logIndexToIndexMap[dayIndex]){
+        return 0;
+      }
+      return this.logStore.currentSelection.logIndexToIndexMap[dayIndex][logIndex] + 1;
+    },
+
+    updateURL() {
+
+      let url = new URL(window.location);
+      url.searchParams.set('from', this.util.formatDate(this.fromDate));
+      url.searchParams.set('to', this.util.formatDate(this.toDate));
+      url.searchParams.set('mode', this.dateMode);
+
+      Object.entries(this.filters).forEach(item => {
+        if (item[1].length > 0) {
+          url.searchParams.set(item[0], item[1]);
+        } else {
+          url.searchParams.delete(item[0])
+        }
+      });
+
+      history.replaceState({}, null, url.toString());
+
+      //window.location = url;
+    },
+    toggleFilter(filter, item, applyAfter = false) {
+      this.$refs.filterDialog.toggleFilter(filter, item, applyAfter);
+    },
+    clearFilters() {
+      this.$refs.filterDialog.clear()
+    },
+    showFilters() {
+      this.$refs.filterDialog.modal.show()
+    },
     changeDateMode() {
       if (this.dateMode !== 'custom') {
-        this.gotoDate(new Date());
+        //this.gotoDate(new Date());
+        this.gotoDate(this.fromDate);
         return;
       }
-      let start = new Date(),
-          end;
+      let start = new Date();
+      let end;
       start.setDate(1);
       end = new Date(start);
       end.setMonth(end.getMonth() + 1);
@@ -279,8 +353,10 @@ export default {
 
       this.fromDate = this.util.formatDate(start);
       this.toDate = this.util.formatDate(end);
-      this.updateTableData();
 
+
+
+      this.updateTableData();
     },
 
     setFilters(filters) {
@@ -297,9 +373,12 @@ export default {
       this.nextDate = newRange.next;
       this.prevDate = newRange.prev;
       this.updateTableData();
+
+
     },
 
     updateTableData() {
+
       if (this.fromDate === '' && this.toDate !== '') {
         this.fromDate = this.toDate;
       }
@@ -314,8 +393,17 @@ export default {
         this.toDate = this.fromDate;
       }
 
+      this.updateURL();
+
+      upper.setHours(0);
+
+      this.globalStore.defaultDate = Date.now() < upper && Date.now() > lower ? undefined : upper;
+
+      this.globalStore.upperDate = upper;
+      this.globalStore.lowerDate = lower;
 
       this.tableData = this.logStore.get(new Date(this.fromDate), new Date(this.toDate), this.filters);
+
 
     },
 

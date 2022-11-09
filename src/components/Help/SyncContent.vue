@@ -16,12 +16,12 @@
     <p>
         Please make sure you use a good and <u>unique</u> password, since there is no way to recover the password in case you lose it. The password
       will be stored in <u>plain text</u> in your browser's local storage which is accessible by anyone who has access to your device,
-      so make that you do NOT use it for any other service.
+      so ensure that you do NOT use it for any other service.
       </p>
 
     <p>
       Synchronization relies on built-in features of the browser (Cryptography, Compression) that may not be available in certain engines or older versions.
-      Some Chromium-based browser with a current build number is recommended!
+      Some Blink/Webkit-based browser with a recent build number is recommended!
     </p>
 
   </TabContent>

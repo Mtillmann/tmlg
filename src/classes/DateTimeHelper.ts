@@ -199,7 +199,7 @@ export class DateTimeHelper {
 
     };
 
-    parseDate(str?: string, format?: string): Date {
+    parseDate(str?: string, format?: string, baseDate:Date = new Date()): Date {
         str = String(str);
         if (str.slice(0, 1) === ':') {
             str = str.slice(1);
@@ -237,9 +237,14 @@ export class DateTimeHelper {
             date = new Date(Date.now() + parseInt(str) * msecPerDay);
         } else if (format && this.formatRegExps(format).actualDateMatchRegExp.test(str)) {
             date = this.dateFromFormattedString(str, format);
+        } else if (/^\d{1,2}$/.test(str)) {
+            date = new Date();
+            date.setDate(parseInt(str, 10));
         } else {
-            date = now;
+            date = baseDate;
         }
+
+        //return new Date(`${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`);
 
         date.setHours(0);
         date.setMinutes(0);

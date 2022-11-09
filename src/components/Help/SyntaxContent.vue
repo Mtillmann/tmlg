@@ -56,20 +56,39 @@
       When omitted, the default rate setting will be used.
       You can toggle the <code>cost</code>-column in the settings.</p>
 
-    <h3 class="fw-light">Everything else</h3>
-    <p>Everything that isn't matched as as property is considered as description and will be used as such.</p>
-
     <p> <a href="#" @click.stop.prevent="$emit('set-view','parsetest')">Explore parser behaviour</a></p>
 
-    <h3 class="fw-light">Multiple Logs</h3>
-    <p>User <kbd>----</kbd> (4x dash) to separate multiple logs. On store, each timelog will be created individually.</p>
+    <h3>Multiple Logs</h3>
+    <p>Use <kbd>----</kbd> (4x dash) to separate multiple logs. On store, each timelog will be created individually.</p>
 
-    <h3 class="fw-light">Timers<kbd>&amp;</kbd></h3>
+    <h3>Multiple Logs, Extend Mode</h3>
+    <p>Use <kbd>****</kbd> (4x asterik) to separate multiple logs. On store, each timelog will be created individually but
+    each one inherits the properties from the first log unless specified inside the current log. This
+      is useful for example when you did the same task for multiple clients, so you only have to write
+      it once, then append <code>****@client2****@client3...</code> to create the identical logs
+      for different clients.
+    </p>
+
+    <p class="bg-dark p-2">Note You can't mix <code>----</code> and <code>****</code>, use either.</p>
+
+    <h3><code><kbd>!</kbd>log</code> (copy)</h3>
+    <p>Copy an existing log with <kbd>!</kbd> as the first character. Use either the row number
+      of the current view or a leading part of a hash. All properties after the the recall
+      code are used on the copy. If no <kbd>:date</kbd> is given, the current default date is
+      used. If you want to copy the same log on the original date use <kbd>!!</kbd> (two exclamation marks).
+    </p>
+
+
+    <h3>Timers<kbd>&amp;</kbd></h3>
     <p>
       Add an <code>&amp;</code> at the end of a timelog to create timer instead of storing the timelog instantly.
       <br>
       Timers are not synced!
     </p>
+
+    <h3>Everything else</h3>
+    <p>Everything that isn't matched as a property is considered as description and will be used as such.</p>
+
 
   </TabContent>
 </template>

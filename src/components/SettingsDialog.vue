@@ -105,6 +105,20 @@
               </label>
             </div>
 
+            <div class="form-check form-switch mb-4">
+              <input
+                  class="form-check-input setting"
+                  type="checkbox"
+                  value=""
+                  id="defaultDateInsideSelection"
+                  v-model="settings.defaultDateInsideSelection"
+              >
+              <label class="form-check-label" for="defaultDateInsideSelection">
+                default date always in range
+              </label>
+              <p class="small">When <code>:date</code> is omitted in timelogs and selected range does not cover current date, log is created inside the selected range</p>
+            </div>
+
           </div>
           <div v-show="currentTab === 'sync'">
 
@@ -141,6 +155,49 @@
                 </label>
               </div>
 
+              <div class="form-check form-switch mb-4">
+                <input
+                    :disabled="!sync.hasCredentials"
+                    class="form-check-input setting"
+                    type="checkbox"
+                    value=""
+                    id="syncSettings"
+                    v-model="settings.syncOnLoad"
+                >
+                <label class="form-check-label" for="syncOnLoad">
+                  sync on load
+                </label>
+              </div>
+
+              <div class="mb-4">
+                <label for="syncAfterSeconds" class="form-label mb-0"
+                >seconds to wait after log insert before sync (0=off):</label
+                >
+                <div class="row g-1">
+                  <div class="col-2">
+                    <input
+                        :disabled="!sync.hasCredentials"
+                        id="syncAfterSeconds"
+                        class="form-control form-control-sm"
+                        min="0"
+                        max="240"
+                        type="number"
+                        v-model.number="settings.syncAfterSeconds"
+                    >
+                  </div>
+                  <div class="col-10 pt-1">
+                    <input
+                        :disabled="!sync.hasCredentials"
+                        type="range"
+                        class="form-range"
+                        min="0"
+                        max="600"
+                        v-model.number="settings.syncAfterSeconds"
+                    >
+                  </div>
+                </div>
+              </div>
+
               <div class="mb-4">
                 <label for="checkForUpdateIntervalMinutes" class="form-label mb-0"
                 >sync interval minutes (0=off):</label
@@ -169,8 +226,8 @@
                   </div>
                 </div>
               </div>
-            </div>
 
+            </div>
           </div>
           <div v-show="currentTab === 'timelogs'">
 
@@ -460,6 +517,20 @@
                 show <code>source</code> column
               </label>
             </div>
+
+            <div class="form-check form-switch mb-4">
+              <input
+                  class="form-check-input setting"
+                  type="checkbox"
+                  value=""
+                  id="showIndexColumn"
+                  v-model="settings.showIndexColumn"
+              >
+              <label class="form-check-label" for="showIndexColumn">
+                show <code>index</code> column, if you want to use <code>!n</code> syntax
+              </label>
+            </div>
+
 
             <div class="form-check form-switch mb-4">
               <input

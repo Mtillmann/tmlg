@@ -5,5 +5,7 @@ export interface ITimelogResult {
         [index: number]: ITimelogResultDay
     };
     matchedProperties: { [index: string]: string[] };
-    range: { [index: string]: number | Date }
+    range: { [index: string]: number | Date },
+    indexToLogMap : number[][],
+    logIndexToIndexMap: number[][]
 }

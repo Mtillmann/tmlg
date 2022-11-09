@@ -68,13 +68,8 @@ export default {
   },
   data() {
 
-    let name = this.util.escapeStringForFilename(this.settings.filenameTemplate.replace('%s',
-        this.util.formatDateRangeByFormat(this.tableData.range.lower, this.tableData.range.upper, this.settings.dateRangeFormat)
-    ));
 
     return {
-      defaultName: name,
-      name,
       cols: {
         date: true,
         clients: true,
@@ -90,6 +85,18 @@ export default {
     }
   },
   computed: {
+    name(){
+      return this.util.escapeStringForFilename(this.settings.filenameTemplate.replace('%s',
+          this.util.formatDateRangeByFormat(this.tableData.range.lower, this.tableData.range.upper, this.settings.dateRangeFormat)
+      ));
+
+    },
+    defaultName(){
+      return this.util.escapeStringForFilename(this.settings.filenameTemplate.replace('%s',
+          this.util.formatDateRangeByFormat(this.tableData.range.lower, this.tableData.range.upper, this.settings.dateRangeFormat)
+      ));
+
+    },
     rows() {
       return this.tableData.days.reduce((aoa, day) => {
 

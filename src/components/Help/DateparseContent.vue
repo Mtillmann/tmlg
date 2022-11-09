@@ -2,7 +2,8 @@
   <TabContent :name="'dateparse'" :view="view">
 
     <h3 class="fw-light">Dates</h3>
-    <p>Dates are parsed from the configured date format (<code>{{ parser.options.dateFormat }}</code>) and several shortcuts:</p>
+    <p>Dates are parsed from the configured date format (<code>{{ parser.options.dateFormat }}</code>) and several
+      shortcuts:</p>
     <table class="table duration-examples">
       <thead>
       <tr>
@@ -12,8 +13,10 @@
       </thead>
       <tbody>
       <tr v-for="(date, i) in dates">
-        <td><code>{{date}} {{date === '' ? '(empty)' : ''}}</code></td>
-        <td>{{util.formatDate(parser.dateTimeHelper.parseDate(date, parser.options.dateFormat), parser.options.dateFormat)}}</td>
+        <td><code>{{ date }} {{ date === '' ? '(empty)' : '' }}</code></td>
+        <td>
+          {{ util.formatDate(parser.dateTimeHelper.parseDate(date, parser.options.dateFormat), parser.options.dateFormat) }}
+        </td>
       </tr>
       </tbody>
     </table>
@@ -30,9 +33,9 @@
       </thead>
       <tbody>
       <tr v-for="(duration, i) in durations">
-        <td><code>{{duration}} {{duration === '' ? '(empty)' : ''}}</code></td>
-        <td>{{parser.dateTimeHelper.parseDuration(duration, dd, ht)}}</td>
-        <td>{{util.formatDuration(parser.dateTimeHelper.parseDuration(duration, dd, ht))}}</td>
+        <td><code>{{ duration }} {{ duration === '' ? '(empty)' : '' }}</code></td>
+        <td>{{ parser.dateTimeHelper.parseDuration(duration, dd, ht) }}</td>
+        <td>{{ util.formatDuration(parser.dateTimeHelper.parseDuration(duration, dd, ht)) }}</td>
       </tr>
       </tbody>
     </table>
@@ -48,15 +51,15 @@ import {TimelogParser} from "@/classes/TimelogParser";
 export default {
   name: "DateparseContent",
   components: {TabContent},
-  inject:['util'],
+  inject: ['util'],
   props: {
     view: String,
-    parser:TimelogParser
+    parser: TimelogParser
   },
   data() {
     return {
-      dd : this.parser.options.defaultDuration,
-      ht : this.parser.options.hourThreshold,
+      dd: this.parser.options.defaultDuration,
+      ht: this.parser.options.hourThreshold,
       durations: [
         '',
         '+1.06',
@@ -78,6 +81,9 @@ export default {
         ':today',
         ':y',
         ':yesterday',
+        ':05',
+        ':5',
+        ':50',
         ':-1',
         ':-3',
         ':+1',
@@ -86,9 +92,9 @@ export default {
         ':fri',
         ':lastwed',
         ':nexttue',
-        ':' + this.parser.dateTimeHelper.convertFormattedString('22.01', 'dd.mm.yyyy', this.parser.options.dateFormat).slice(0,-5),
-        ':' + this.parser.dateTimeHelper.convertFormattedString('11.12', 'dd.mm.yyyy', this.parser.options.dateFormat).slice(0,-5),
-        ':' + this.parser.dateTimeHelper.convertFormattedString('10.03.2021', 'dd.mm.yyyy', this.parser.options.dateFormat),
+        ':' + this.parser.dateTimeHelper.convertFormattedString('22.01', 'dd.mm.yyyy', this.parser.options.dateFormat).slice(0, -5),
+        ':' + this.parser.dateTimeHelper.convertFormattedString('11.12', 'dd.mm.yyyy', this.parser.options.dateFormat).slice(0, -5),
+        ':' + this.parser.dateTimeHelper.convertFormattedString('10.03.2022', 'dd.mm.yyyy', this.parser.options.dateFormat),
       ]
 
     }

@@ -1,5 +1,7 @@
 import {DateTimeHelper} from "@/classes/DateTimeHelper";
 import type {ITimelog} from "@/types/ITimelog";
+import type {IDecoratedTimelog} from "@/types/IDecoratedTimelog";
+
 
 export class TimelogParser {
 
@@ -38,27 +40,26 @@ export class TimelogParser {
         return string.replace(re, ' ');
     }
 
-    parse(logString: string, existingHash: string | boolean = false): ITimelog {
+    parse(logString: string, existingHash: string | boolean = false, defaultDate: Date | boolean = false): ITimelog {
+
 
         let hash = existingHash,
-            date = this.dateTimeHelper.parseDate();
+            date = defaultDate instanceof Date ? defaultDate : this.dateTimeHelper.parseDate();
 
         logString = this.dateTimeHelper.convertFormattedDateInString(logString, 'yyyy-mm-dd', this.options.dateFormat);
 
-        logString = logString.replace(/&\s*/,'');
+        logString = logString.replace(/&\s*/, '');
 
         if (/^~[a-f0-9]{16}/.test(logString)) {
             hash = logString.slice(1, 16);
             logString = logString.replace(/~[a-f0-9]{16}/, '');
         }
 
-
         const givenDate = logString.match(this.dateTimeHelper.formatRegExps(this.options.dateFormat).dateMatchRegExp);
 
+
         if (givenDate) {
-            date = this.dateTimeHelper.parseDate(givenDate[2], this.options.dateFormat);
-            //todo something is fucky with date format :+... probably word bound in regexp ... fixed?
-            //console.log({givenDate})
+            date = this.dateTimeHelper.parseDate(givenDate[2], this.options.dateFormat, defaultDate instanceof Date ? defaultDate : new Date());
             logString = logString.replace(givenDate[0], ' ');
         }
 
@@ -100,14 +101,12 @@ export class TimelogParser {
             parsed.sources = [this.options.defaultSource];
         }
 
-
         const givenDuration = logString.match(this.durationMatchRegexp);
         if (givenDuration) {
             parsed.duration = this.dateTimeHelper.parseDuration(givenDuration[0].slice(1),
                 this.options.defaultDuration, this.options.hourThreshold);
             parsed.description = parsed.description.replace(givenDuration[0], ' ');
         }
-
 
         const givenRateOrFixedPrice = logString.match(/\$(\$?)([\d.]{1,6})/);
         if (givenRateOrFixedPrice) {
@@ -141,7 +140,7 @@ export class TimelogParser {
         return parsed;
     }
 
-    normalize(timelog: ITimelog): string {
+    normalize(timelog: ITimelog | IDecoratedTimelog): string {
         return [
             '~' + timelog.hash,
             '+' + this.options.util.formatDuration(timelog.duration),
@@ -156,14 +155,14 @@ export class TimelogParser {
             .join(' ').replace(/[ ]{2,}/g, ' ');
     }
 
-    decoratedParse(logString: string): { [index: string]: any } {
-        const parsed: { [index: string]: any } = this.parse(logString),
-            isTimer = logString.match(/&\s*$/);
+    decoratedParse(logString: string, defaultDate: Date | boolean = false): IDecoratedTimelog {
 
 
-
-        return {
+        const parsed: ITimelog = this.parse(logString, false, defaultDate);
+        const isTimer: boolean = /&\s*$/.test(logString);
+        const output: IDecoratedTimelog = {
             ...parsed, ...{
+
                 usesDefaultClient: parsed.clients.length === 1 && parsed.clients[0] === this.options.defaultClient && logString.indexOf(parsed.clients[0]) < 0,
                 usesDefaultProject: parsed.projects.length === 1 && parsed.projects[0] === this.options.defaultProject && logString.indexOf(parsed.projects[0]) < 0,
                 usesDefaultTask: parsed.tasks.length === 1 && parsed.tasks[0] === this.options.defaultTask && logString.indexOf(parsed.tasks[0]) < 0,
@@ -173,7 +172,74 @@ export class TimelogParser {
                 usesDefaultRate: !logString.match(/\$\d+/),
                 isTimer
             }
+
+        }
+
+        return output;
+    }
+
+    extend(source: ITimelog | string, targets: string[] | string, options: { [index: string]: any }):(string | ITimelog | IDecoratedTimelog)[] {
+        options = {
+            ...{
+                normalized: true,
+                includeSource: false,
+                stripHash: true,
+                defaultDate: false,
+                forceDefaultDateOnDateless: false
+            }, ...options
         };
 
+
+        let actualSource: ITimelog | IDecoratedTimelog = (typeof source === 'string') ? this.decoratedParse(source, options.defaultDate) : source;
+
+        let logs:(string | ITimelog | IDecoratedTimelog)[] = (typeof targets === 'string' ? [targets] : targets)
+            .map(item => {
+                item = item.replace(/\*+$/, '');
+                let log: IDecoratedTimelog = this.decoratedParse(item, options.defaultDate);
+
+                ['clients', 'projects', 'tasks', 'sources'].forEach((property:string) => {
+                    if (log[property].length === 0) {
+                        log[property] = actualSource[property].slice();
+                    }
+                });
+
+                if (log.usesDefaultDuration && actualSource.duration !== log.duration) {
+                    log.duration = actualSource.duration;
+                }
+
+                if (!log.description) {
+                    log.description = actualSource.description;
+                }
+
+                if (!actualSource.usesDefaultDate && log.usesDefaultDate) {
+                    log.timestamp = actualSource.timestamp;
+                }
+
+                if (log.usesDefaultDate && options.forceDefaultDateOnDateless) {
+                    log.timestamp = +options.defaultDate;
+                }
+
+                if (!actualSource.usesDefaultRate && log.usesDefaultRate) {
+                    log.rate = actualSource.rate;
+                }
+
+
+                if (!options.normalized) {
+                    return log;
+                }
+
+                return this.normalize(log).replace(options.stripHash ? /^[~a-f0-9]+\s/ : '', '');
+            });
+
+        if (options.includeSource) {
+            if(options.normalized){
+                logs.unshift(this.normalize(actualSource).replace(options.stripHash ? /^[~a-f0-9]+\s/ : '', ''));
+            }else{
+                logs.unshift(actualSource);
+            }
+
+        }
+
+        return logs;
     }
 }
