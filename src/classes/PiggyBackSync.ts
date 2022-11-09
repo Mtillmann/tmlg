@@ -198,8 +198,8 @@ export class PiggyBackSync {
         const string = JSON.stringify(data);
 
         if (this.hasCredentials) {
-            const compressed = await this.compress(string),
-                compressedEncrypted = await this.encryptData(compressed, this.password);
+            const compressed = await this.compress(string);
+            const compressedEncrypted = await this.encryptData(compressed, this.password);
 
             return FETCH(this.server + "/bookmarks/" + this.syncId, {
                 method: "PUT",
@@ -234,12 +234,31 @@ export class PiggyBackSync {
     }
 
     async compress(string: string, encoding = "deflate"): Promise<ArrayBuffer> {
-        const byteArray = new TextEncoder().encode(string),
-            // @ts-ignore
-            cs = new CompressionStream(encoding),
-            writer = cs.writable.getWriter();
-        writer.write(byteArray);
-        writer.close();
+        const stream = new TextEncoder().encode(string);
+        // @ts-ignore
+        const cs = new CompressionStream(encoding);
+        const writer = cs.writable.getWriter();
+
+        //for whatever reason, the old code does not work
+        //any longer in local environment, but still works remote
+        //below is the MDN doc implementation that works locally:
+
+        writer.ready
+            .then(() => writer.write(stream))
+            .catch((err:any) => console.error("Chunk error:", err));
+
+        writer.ready
+            .then(() => writer.close())
+            .catch((err:any) => console.error("Stream error:", err));
+
+        //this is the old code
+        /*
+           writer.write(byteArray);
+           writer.close();
+           return new Response(cs.readable).arrayBuffer();
+         */
+
+
         return new Response(cs.readable).arrayBuffer();
     }
 

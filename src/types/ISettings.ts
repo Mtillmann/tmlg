@@ -31,5 +31,12 @@ export interface ISettings {
     syncSettings: boolean;
     defaultView?: string;
     showHelpIcon?: boolean;
+    /**
+     * when set, the default date for log (when no date is given) will be inside current selection
+     */
+    defaultDateInsideSelection?:boolean;
+    syncAfterSeconds?:number;
+    syncOnLoad?:boolean;
+    showIndexColumn: boolean;
     cli_syncOnSave?: boolean;
 }

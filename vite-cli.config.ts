@@ -1,6 +1,7 @@
 import {defineConfig} from "vite";
 import {fileURLToPath, URL} from "url";
 
+
 const path = require('path')
 export default defineConfig({
     publicDir: false,
@@ -15,7 +16,7 @@ export default defineConfig({
         },
         rollupOptions : {
             output : {
-                banner : '#!/usr/bin/env node'
+                banner : '#!/usr/bin/env node',
             }
         }
 

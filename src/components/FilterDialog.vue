@@ -31,7 +31,8 @@
                   <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                           :data-bs-target="`#collapse${i}`"
                           aria-expanded="false" :aria-controls="`collapse${i}`">
-                    {{ filterKey }} ({{ filters[filterKey].length }} / {{tableData.matchedProperties[filterKey].length}} )
+                    {{ filterKey }} ({{ filters[filterKey].length }} /
+                    {{ tableData.matchedProperties[filterKey].length }} )
                   </button>
                 </h2>
                 <div :id="`collapse${i}`" class="accordion-collapse collapse" :aria-labelledby="`heading${i}`"
@@ -93,31 +94,51 @@ export default {
   components: {CloseButton},
   props: {
     suggestionProvider: SuggestionProvider,
-    tableData: {}
+    tableData: {},
   },
   mounted() {
     this.modal = new Modal(this.$refs.modal);
+    if (this.isFiltered) {
+      this.apply()
+    }
   },
   data() {
-    const filters = {
-      clients: [],
-      projects: [],
-      tasks: [],
-      sources: []
-    };
+
+    let url = new URL(window.location),
+        filters = {
+          clients: [],
+          projects: [],
+          tasks: [],
+          sources: []
+        },
+        isFiltered = false;
+
+    ['clients', 'projects', 'tasks', 'sources'].forEach(type => {
+      if (url.searchParams.has(type)) {
+        filters[type] = url.searchParams.get(type).split(',');
+        isFiltered = true;
+      }
+    });
+
+
+
     return {
       filterKeys: Object.keys(filters),
-      filters
+      filters, isFiltered
     }
   },
 
   methods: {
     toggleFilter(filter, item, applyAfter = false) {
+
+
       if (this.filters[filter].indexOf(item) > -1) {
         this.filters[filter].splice(this.filters[filter].indexOf(item), 1);
       } else {
         this.filters[filter].push(item);
       }
+
+
       if (applyAfter) {
         this.apply()
       }

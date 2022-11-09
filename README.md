@@ -2,10 +2,9 @@
 
 A simple and fast time logger for web and cli:
 
-- [simple syntax](https://mtillmann.github.io/tmlg/#t=help), no unnecessary controls
+- [simple syntax](https://mtillmann.github.io/tmlg/#h=help), no unnecessary controls
 - responsive, color-scheme-aware frontend
 - serverless synchronization between multiple devices
-- zero requirements and dependencies (except a decent browser)
 - bundled with http-server
 - supports timers
 - exports to xlsx, odt...
@@ -22,6 +21,18 @@ options to the same command, e.g. `tmlg --serve --port 1234`...
 You can also just download this repo and put the contents of `/dist/` on any http server.
 
 > The app needs to served either from `localhost` or a `SSL`-enabled server, otherwise the browser might deny access to certain APIs
+
+## Changelog
+
+### 1.0.0
+
+- new extensible log feature `****`
+- new `!`/`!!` history/copy feature
+- persistent state in url
+- more aggressive syncing strategy
+- misc date display/parsing/range related fixes and improvements
+- removed loading screen
+- misc improvements
 
 ## CLI Usage
 

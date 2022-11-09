@@ -31,5 +31,9 @@ export const defaultSettings:ISettings = {
     syncEnabled: true,
     syncSettings: true,
     defaultView: "month",
-    showHelpIcon: true
+    showHelpIcon: true,
+    defaultDateInsideSelection : true,
+    syncAfterSeconds : 30,
+    syncOnLoad : true,
+    showIndexColumn : true
 };

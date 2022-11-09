@@ -456,6 +456,7 @@ export default {
       this.globalStore.setLoading(true);
       this.view = 'register';
       this.sync.generateNewSyncId(this.server).then(responseJson => {
+
         this.globalStore.setLoading(false);
         if ('code' in responseJson && /exception/i.test(responseJson.code)) {
           this.view = 'registerError';
@@ -463,6 +464,10 @@ export default {
         } else {
           this.syncId = responseJson.id;
         }
+      }).catch(e => {
+        this.globalStore.setLoading(false);
+        this.view = 'registerError';
+        this.registerError = e.message;
       })
     },
     setSyncCredentials() {

@@ -77,6 +77,7 @@ export default {
   data() {
     return {
       inputIsMultiple: false,
+      inputIsMultipleExtend: false,
       currentLog: null,
       placeholder: '',
       previewString: '',
@@ -96,6 +97,8 @@ export default {
   },
   watch: {
     logString: function (nv, ov) {
+
+      this.inputIsMultipleExtend = nv.indexOf('****') > -1
 
       this.inputIsMultiple = nv.indexOf('----') > -1;
     }
@@ -179,9 +182,9 @@ export default {
 
       if (this.settings.showParsePreviewOnType) {
 
-        const logs = this.logString.split('----');
+        const logs = this.logString.split(/----|\*\*\*\*/);
 
-        const parsed = this.parser.decoratedParse(logs[0]);
+        const parsed = this.parser.decoratedParse(logs[0], this.settings.defaultDateInsideSelection ? this.globalStore.defaultDate : false);
         this.previewString = `
                 <span class="${this.currentLog ? 'd-none' : ''}">Preview:</span>
                 <span class="${this.currentLog ? 'text-info' : 'd-none'}">Editing:</span>
@@ -200,23 +203,25 @@ export default {
       }
     },
 
-    afterProcessing(){
+    afterProcessing() {
       if (this.settings.clearTimeLogOnStore) {
         this.logString = '';
         this.previewString = null;
         this.currentLog = false;
         this.inputIsMultiple = false;
+        this.inputIsMultipleExtend = false;
       }
 
 
       this.$emit('reload-table');
+      this.$emit('after-insert');
       this.setPlaceholder();
       this.unsetSuggestions();
     },
 
     setTimer() {
       let logStrings = this.logString.split('----');
-      if(logStrings[0].trim().length === 0){
+      if (logStrings[0].trim().length === 0) {
         return;
       }
 
@@ -229,6 +234,20 @@ export default {
       this.afterProcessing();
     },
 
+    storeCurrentLogAsMultipleExtend() {
+      const logStrings = this.logString.split('****');
+      const extended = this.parser.extend(logStrings[0], logStrings.slice(1), {
+        normalized: true,
+        includeSource: true,
+        stripHash: true,
+        defaultDate: this.settings.defaultDateInsideSelection ? this.globalStore.defaultDate : false
+      });
+
+      this.logString = extended.join('----');
+      console.log(this.logString);
+      this.storeCurrentLogAsMultiple();
+    },
+
     storeCurrentLogAsMultiple() {
       if (this.logString.length === 0) {
         return;
@@ -236,29 +255,42 @@ export default {
 
       let logStrings = this.logString.split('----'),
           logInserts = 0,
+          logInsertsOutOfRange = 0,
           timerInserts = 0;
 
       logStrings.forEach(log => {
 
-        if(log.trim().length === 0){
+        if (log.trim().length === 0) {
           return;
         }
 
-        let parsedLog = this.parser.parse(log);
+        let parsedLog = this.parser.parse(log, false, this.settings.defaultDateInsideSelection ? this.globalStore.defaultDate : false);
 
         if (/&\s*$/.test(log)) {
           this.timers.setTimer(parsedLog);
+          this.suggestionProvider.updateFromLog(parsedLog);
           timerInserts++;
         } else {
           this.logStore.insert(parsedLog);
+          this.suggestionProvider.updateFromLog(parsedLog);
+
+          let nd = new Date(parsedLog.timestamp);
+          if(nd < this.globalStore.lowerDate || nd > this.globalStore.upperDate){
+            logInsertsOutOfRange++;
+          }
+
           logInserts++;
         }
 
       })
 
 
-      if (logInserts > 0) {
-        this.globalStore.toast(`${logInserts} logs saved...`)
+      if (logInserts > 0 && logInserts - logInsertsOutOfRange > 0) {
+        this.globalStore.toast(`${logInserts - logInsertsOutOfRange} logs saved...`)
+      }
+
+      if(logInsertsOutOfRange > 0){
+        this.globalStore.toast(`${logInsertsOutOfRange} logs saved outside of current date range...`)
       }
 
       if (timerInserts > 0) {
@@ -270,8 +302,58 @@ export default {
 
     },
 
+    applyHistoryExpansions() {
+      const splitter = /----/.test(this.logString) ? '----' : '****';
+      this.logString = this.logString.split(splitter)
+          .map(log => {
+            const index = log.match(/^!!?(\d+)/);
+            const hash = log.match(/^!!?([a-f0-9]{2,})/);
+            const forceDefaultDateOnDateless = log.slice(0,2) !== '!!';
+
+            let sourceLog = null;
+            if (!!index && !hash) {
+              const actualIndex = parseInt(index[1]) - 1;
+              const mapping = this.logStore.currentSelection.indexToLogMap[actualIndex];
+              if (mapping && this.logStore.currentSelection.days[mapping[0]] && this.logStore.currentSelection.days[mapping[0]].logs[mapping[1]]) {
+                sourceLog = this.logStore.currentSelection.days[mapping[0]].logs[mapping[1]];
+                log = log.replace(/^!!?\d+\s*/, '');
+              }
+            }
+
+            if(!!hash){
+              const hfl = hash[1].length;
+              sourceLog = this.logStore.data.find(l => l.hash.slice(0, hfl) === hash[1]);
+              if(sourceLog){
+                log = log.replace(/^!!?([a-f0-9]{2,})/, '');
+              }
+            }
+
+            if(sourceLog){
+              log = this.parser.extend(sourceLog,
+                  log,
+                  {
+                    normalized: true,
+                    includeSource: false,
+                    stripHash: true,
+                    defaultDate: this.settings.defaultDateInsideSelection ? this.globalStore.defaultDate : false,
+                    forceDefaultDateOnDateless
+                  }
+              );
+
+            }
+            return log;
+          }).join(splitter);
+    },
+
     storeCurrentLog() {
       if (this.logString.length === 0) {
+        return;
+      }
+
+      this.applyHistoryExpansions();
+
+      if (!this.currentLog && this.inputIsMultipleExtend) {
+        this.storeCurrentLogAsMultipleExtend();
         return;
       }
 
@@ -300,9 +382,15 @@ export default {
         }
         this.globalStore.toast('log updated...')
       } else {
-        parsedLog = this.parser.parse(this.logString);
+        parsedLog = this.parser.parse(this.logString, false, this.settings.defaultDateInsideSelection ? this.globalStore.defaultDate : false);
         this.logStore.insert(parsedLog);
-        this.globalStore.toast('log saved...')
+
+        let nd = new Date(parsedLog.timestamp);
+        if(nd < this.globalStore.lowerDate || nd > this.globalStore.upperDate){
+          this.globalStore.toast('log saved outside of current date range...')
+        }else{
+          this.globalStore.toast('log saved...')
+        }
       }
       this.suggestionProvider.updateFromLog(parsedLog)
 
@@ -345,7 +433,6 @@ export default {
       this.currentLog = log;
       this.logString = this.currentLog.normalized.replace(/^~[a-f0-9 ]*/, '');
 
-      //this.logString = this.logString.replace(/:\d{4}-\d{2}-\d{2}/, ':' + this.util.formatDate(log.timestamp, this.settings.dateFormat));
       this.logString = this.parser.dateTimeHelper.convertFormattedDateInString(this.logString, 'yyyy-mm-dd', this.settings.dateFormat);
 
       this.$refs.textarea.focus();

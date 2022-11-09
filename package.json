@@ -1,12 +1,13 @@
 {
   "name": "tmlg",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "license": "MIT",
   "preferGlobal": true,
   "description": "simple timelogging for web and cli with exports",
   "bin": {
-    "http-server": "./bin/tmlg"
+    "tmlg": "./bin/tmlg"
   },
+  "keywords": ["timelog", "work", "worklog", "timetracking"],
   "scripts": {
     "build-cli": "vite build --config vite-cli.config.ts && npm run rename-cli",
     "dev": "vite",
@@ -21,7 +22,10 @@
     "bin"
   ],
   "dependencies": {
-    "http-server": "^14.1.0"
+    "http-server": "^14.1.0",
+    "picocolors": "^1.0.0",
+    "inquirer": "^8.2.2",
+    "isomorphic-fetch": "^3.0.0"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.0",
@@ -35,11 +39,8 @@
     "easyqrcodejs": "^4.4.10",
     "eslint": "^8.5.0",
     "eslint-plugin-vue": "^8.2.0",
-    "inquirer": "^8.2.2",
-    "isomorphic-fetch": "^3.0.0",
     "minimist": "^1.2.6",
     "node-fetch": "^3.2.3",
-    "picocolors": "^1.0.0",
     "pinia": "^2.0.12",
     "prettier": "^2.5.1",
     "typescript": "~4.5.5",

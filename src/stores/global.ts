@@ -3,9 +3,15 @@ import {defineStore} from 'pinia'
 
 export const useGlobalStore = defineStore('globalStore', {
     state: () => {
+
+
+
         return {
             toasts: [],
-            loading: false
+            loading: false,
+            defaultDate : null,
+            upperDate : null,
+            lowerDate : null
         }
     },
     // could also be defined as

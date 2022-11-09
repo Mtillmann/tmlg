@@ -1,4 +1,5 @@
 export interface ITimelog {
+    [key: string]: any, //otherwise I can't use strings as keys...
     timestamp: number;
     hash: string;
     clients: string[];
